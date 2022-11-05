@@ -6,10 +6,10 @@ use actix_web::{
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::AppState;
+use crate::handlers::state::AppState;
 
 #[derive(Deserialize)]
-struct Info {
+pub struct Info {
     uuid: String,
 }
 
@@ -18,7 +18,7 @@ async fn redirect(info: web::Path<Info>, state: Data<AppState>) -> impl Responde
     state.inc().await;
 
     let url = state.get(&info.uuid).await;
-    info!("map: {:?}", state.map);
+    log::info!("map: {:?}", state.map);
 
     state.dec().await;
     url.map_or_else(
@@ -32,19 +32,19 @@ async fn redirect(info: web::Path<Info>, state: Data<AppState>) -> impl Responde
 }
 
 #[derive(Deserialize)]
-struct Url {
+pub struct Url {
     uri: String,
 }
 
 #[post("/")]
-async fn handler(info: web::Json<Url>, state: Data<AppState>) -> impl Responder {
+pub async fn handler(info: web::Json<Url>, state: Data<AppState>) -> impl Responder {
     state.inc().await;
 
     let url = generate_url();
     state
         .insert(info.uri.to_owned(), String::from("https://www.google.com"))
         .await;
-    info!("{:?}", state.map);
+    log::info!("{:?}", state.map);
 
     state.dec().await;
 
